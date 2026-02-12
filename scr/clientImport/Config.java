@@ -22,10 +22,14 @@ public class Config {
 
     private static String envOrDefault(String key, String fallback) {
         String value = System.getenv(key);
-        if (value == null || value.trim().isEmpty()) {
+        if (value == null) {
             return fallback;
         }
-        return value.trim();
+        String trimmed = value.trim();
+        if (trimmed.isEmpty()) {
+            return fallback;
+        }
+        return trimmed;
     }
 
     // Defaults (WooCommerce)
@@ -105,7 +109,7 @@ public class Config {
     private void warnIfBlank(String key, String label, String envVar) {
         String value = props.getProperty(key);
         if (value == null || value.trim().isEmpty()) {
-            System.err.println("Missing configuration for " + label + " (" + key + "). Set " + envVar + " or update " + CONFIG_FILE + ".");
+            System.err.println("Missing configuration for " + label + " (" + key + "). Set " + envVar + " or update " + CONFIG_FILE + " before running live imports.");
         }
     }
 
