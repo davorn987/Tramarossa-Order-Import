@@ -23,7 +23,7 @@ public class Config {
     private static String envOrDefault(String key, String fallback) {
         String value = System.getenv(key);
         if (isBlank(value)) {
-            return fallback;
+            return fallback == null ? "" : fallback.trim();
         }
         return value.trim();
     }
@@ -109,7 +109,8 @@ public class Config {
     private void warnIfBlank(String key, String label, String envVar) {
         String value = props.getProperty(key);
         if (isBlank(value)) {
-            System.err.println("Missing configuration for " + label + " (" + key + "). Set " + envVar + " or add " + key + " in " + CONFIG_FILE + " before running live imports.");
+            String configPath = isBlank(CONFIG_FILE) ? "~/.clientimport.properties" : CONFIG_FILE;
+            System.err.println("Missing configuration for " + label + " (" + key + "). Set " + envVar + " or add " + key + " in " + configPath + " before running live imports.");
         }
     }
 
