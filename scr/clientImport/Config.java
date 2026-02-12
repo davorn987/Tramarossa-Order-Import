@@ -12,27 +12,33 @@ import java.util.Properties;
  * Configuration helper that persists settings to a properties file
  * in the user's home directory (~/.clientimport.properties).
  *
- * Note: DB password and API secrets are stored in plain text in the properties file.
+ * Note: API secrets should be provided via environment variables or the local
+ * properties file and never committed to source control.
  */
 public class Config {
     private static final String CONFIG_FILE = System.getProperty("user.home") + File.separator + ".clientimport.properties";
     private static Config instance;
     private final Properties props = new Properties();
 
+    private static String envOrEmpty(String key) {
+        String value = System.getenv(key);
+        return value == null ? "" : value;
+    }
+
     // Defaults (WooCommerce)
     public static final String DEFAULT_WC_BASE_URL = "https://www.tramarossa.it/wp-json/wc/v3";
-    public static final String DEFAULT_WC_CONSUMER_KEY = "ck_b930cc87ba0718f52dffea420f5be96b439149dd";
-    public static final String DEFAULT_WC_CONSUMER_SECRET = "cs_68af5d88b9f7fb93d9f696bc83373e368e536410";
+    public static final String DEFAULT_WC_CONSUMER_KEY = envOrEmpty("WC_CONSUMER_KEY");
+    public static final String DEFAULT_WC_CONSUMER_SECRET = envOrEmpty("WC_CONSUMER_SECRET");
 
     // Defaults (Gravity Forms REST API v2)
     public static final String DEFAULT_GF_BASE_URL = "https://b2b.tramarossa.it";
-    public static final String DEFAULT_GF_CONSUMER_KEY = "ck_625fc28ee8d227d4dfb54106d300e859a49a9c94";
-    public static final String DEFAULT_GF_CONSUMER_SECRET = "cs_929ff863f36b0b0205513bc5a1e7e321e1fd4a81";
+    public static final String DEFAULT_GF_CONSUMER_KEY = envOrEmpty("GF_CONSUMER_KEY");
+    public static final String DEFAULT_GF_CONSUMER_SECRET = envOrEmpty("GF_CONSUMER_SECRET");
 
     // Defaults (Oracle)
     public static final String DEFAULT_DB_URL = "jdbc:oracle:thin:@//ONISD2.onindustry.local:1521/TRAMDB";
-    public static final String DEFAULT_DB_USER = "madeveneto";
-    public static final String DEFAULT_DB_PASS = "SD";
+    public static final String DEFAULT_DB_USER = envOrEmpty("DB_USER");
+    public static final String DEFAULT_DB_PASS = envOrEmpty("DB_PASSWORD");
 
     // NEW defaults (GF viewer)
     public static final int DEFAULT_GF_FORM_ID = 224;
