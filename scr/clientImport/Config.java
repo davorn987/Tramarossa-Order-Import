@@ -12,27 +12,40 @@ import java.util.Properties;
  * Configuration helper that persists settings to a properties file
  * in the user's home directory (~/.clientimport.properties).
  *
- * Note: DB password and API secrets are stored in plain text in the properties file.
+ * Note: API secrets should be provided via environment variables or the local
+ * properties file and never committed to source control.
  */
 public class Config {
     private static final String CONFIG_FILE = System.getProperty("user.home") + File.separator + ".clientimport.properties";
     private static Config instance;
     private final Properties props = new Properties();
 
+    private static String envOrDefault(String key, String fallback) {
+        String value = System.getenv(key);
+        if (isBlank(value)) {
+            return fallback == null ? "" : fallback.trim();
+        }
+        return value.trim();
+    }
+
+    private static boolean isBlank(String value) {
+        return value == null || value.trim().isEmpty();
+    }
+
     // Defaults (WooCommerce)
     public static final String DEFAULT_WC_BASE_URL = "https://www.tramarossa.it/wp-json/wc/v3";
-    public static final String DEFAULT_WC_CONSUMER_KEY = "ck_b930cc87ba0718f52dffea420f5be96b439149dd";
-    public static final String DEFAULT_WC_CONSUMER_SECRET = "cs_68af5d88b9f7fb93d9f696bc83373e368e536410";
+    public static final String DEFAULT_WC_CONSUMER_KEY = "";
+    public static final String DEFAULT_WC_CONSUMER_SECRET = "";
 
     // Defaults (Gravity Forms REST API v2)
     public static final String DEFAULT_GF_BASE_URL = "https://b2b.tramarossa.it";
-    public static final String DEFAULT_GF_CONSUMER_KEY = "ck_625fc28ee8d227d4dfb54106d300e859a49a9c94";
-    public static final String DEFAULT_GF_CONSUMER_SECRET = "cs_929ff863f36b0b0205513bc5a1e7e321e1fd4a81";
+    public static final String DEFAULT_GF_CONSUMER_KEY = "";
+    public static final String DEFAULT_GF_CONSUMER_SECRET = "";
 
     // Defaults (Oracle)
     public static final String DEFAULT_DB_URL = "jdbc:oracle:thin:@//ONISD2.onindustry.local:1521/TRAMDB";
-    public static final String DEFAULT_DB_USER = "madeveneto";
-    public static final String DEFAULT_DB_PASS = "SD";
+    public static final String DEFAULT_DB_USER = "";
+    public static final String DEFAULT_DB_PASS = "";
 
     // NEW defaults (GF viewer)
     public static final int DEFAULT_GF_FORM_ID = 224;
@@ -42,6 +55,12 @@ public class Config {
     private Config() {
         setDefaults();
         load();
+        warnIfBlank("woo.key", "WooCommerce consumer key", "WC_CONSUMER_KEY");
+        warnIfBlank("woo.secret", "WooCommerce consumer secret", "WC_CONSUMER_SECRET");
+        warnIfBlank("gf.key", "Gravity Forms consumer key", "GF_CONSUMER_KEY");
+        warnIfBlank("gf.secret", "Gravity Forms consumer secret", "GF_CONSUMER_SECRET");
+        warnIfBlank("db.user", "DB user", "DB_USER");
+        warnIfBlank("db.password", "DB password", "DB_PASSWORD");
     }
 
     public static synchronized Config get() {
@@ -52,18 +71,18 @@ public class Config {
     private void setDefaults() {
         // Woo
         props.setProperty("woo.api.base", DEFAULT_WC_BASE_URL);
-        props.setProperty("woo.key", DEFAULT_WC_CONSUMER_KEY);
-        props.setProperty("woo.secret", DEFAULT_WC_CONSUMER_SECRET);
+        props.setProperty("woo.key", envOrDefault("WC_CONSUMER_KEY", DEFAULT_WC_CONSUMER_KEY));
+        props.setProperty("woo.secret", envOrDefault("WC_CONSUMER_SECRET", DEFAULT_WC_CONSUMER_SECRET));
 
         // Gravity Forms
         props.setProperty("gf.api.base", DEFAULT_GF_BASE_URL);
-        props.setProperty("gf.key", DEFAULT_GF_CONSUMER_KEY);
-        props.setProperty("gf.secret", DEFAULT_GF_CONSUMER_SECRET);
+        props.setProperty("gf.key", envOrDefault("GF_CONSUMER_KEY", DEFAULT_GF_CONSUMER_KEY));
+        props.setProperty("gf.secret", envOrDefault("GF_CONSUMER_SECRET", DEFAULT_GF_CONSUMER_SECRET));
 
         // DB
         props.setProperty("db.url", DEFAULT_DB_URL);
-        props.setProperty("db.user", DEFAULT_DB_USER);
-        props.setProperty("db.password", DEFAULT_DB_PASS);
+        props.setProperty("db.user", envOrDefault("DB_USER", DEFAULT_DB_USER));
+        props.setProperty("db.password", envOrDefault("DB_PASSWORD", DEFAULT_DB_PASS));
 
         // NEW viewer defaults
         props.setProperty("gf.formId", String.valueOf(DEFAULT_GF_FORM_ID));
@@ -84,6 +103,13 @@ public class Config {
     public synchronized void save() throws IOException {
         try (OutputStream out = new FileOutputStream(CONFIG_FILE)) {
             props.store(out, "Client Importer configuration");
+        }
+    }
+
+    private void warnIfBlank(String key, String label, String envVar) {
+        String value = props.getProperty(key);
+        if (isBlank(value)) {
+            System.err.println("Missing configuration for " + label + " (" + key + "). Set " + envVar + " or add " + key + " to " + CONFIG_FILE + ".");
         }
     }
 
