@@ -25,7 +25,7 @@ public class Config {
         if (value == null || value.trim().isEmpty()) {
             return fallback;
         }
-        return value;
+        return value.trim();
     }
 
     // Defaults (WooCommerce)
@@ -105,7 +105,7 @@ public class Config {
     private void warnIfBlank(String key, String label, String envVar) {
         String value = props.getProperty(key);
         if (value == null || value.trim().isEmpty()) {
-            System.err.println("Missing configuration for " + label + " (" + key + "). Set " + envVar + " or update ~/.clientimport.properties.");
+            System.err.println("Missing configuration for " + label + " (" + key + "). Set " + envVar + " or update " + CONFIG_FILE + ".");
         }
     }
 
