@@ -51,12 +51,12 @@ public class Config {
     private Config() {
         setDefaults();
         load();
-        warnIfBlank("woo.key", "WooCommerce consumer key");
-        warnIfBlank("woo.secret", "WooCommerce consumer secret");
-        warnIfBlank("gf.key", "Gravity Forms consumer key");
-        warnIfBlank("gf.secret", "Gravity Forms consumer secret");
-        warnIfBlank("db.user", "DB user");
-        warnIfBlank("db.password", "DB password");
+        warnIfBlank("woo.key", "WooCommerce consumer key", "WC_CONSUMER_KEY");
+        warnIfBlank("woo.secret", "WooCommerce consumer secret", "WC_CONSUMER_SECRET");
+        warnIfBlank("gf.key", "Gravity Forms consumer key", "GF_CONSUMER_KEY");
+        warnIfBlank("gf.secret", "Gravity Forms consumer secret", "GF_CONSUMER_SECRET");
+        warnIfBlank("db.user", "DB user", "DB_USER");
+        warnIfBlank("db.password", "DB password", "DB_PASSWORD");
     }
 
     public static synchronized Config get() {
@@ -102,10 +102,10 @@ public class Config {
         }
     }
 
-    private void warnIfBlank(String key, String label) {
+    private void warnIfBlank(String key, String label, String envVar) {
         String value = props.getProperty(key);
         if (value == null || value.trim().isEmpty()) {
-            System.err.println("Missing configuration for " + label + " (" + key + "). Set it in " + CONFIG_FILE + " or via environment variables.");
+            System.err.println("Missing configuration for " + label + " (" + key + "). Set " + envVar + " or update " + CONFIG_FILE + ".");
         }
     }
 
