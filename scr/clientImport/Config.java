@@ -20,7 +20,7 @@ public class Config {
     private static Config instance;
     private final Properties props = new Properties();
 
-    private static String envOrDefault(String key, String fallback) {
+    private String envOrDefault(String key, String fallback) {
         String value = System.getenv(key);
         if (value == null || value.isBlank()) {
             return fallback;
@@ -105,7 +105,7 @@ public class Config {
     private void warnIfBlank(String key, String label) {
         String value = props.getProperty(key);
         if (value == null || value.isBlank()) {
-            System.err.println("Missing configuration for " + label + " (" + key + ").");
+            System.err.println("Missing configuration for " + label + " (" + key + "). Set it in " + CONFIG_FILE + " or via environment variables.");
         }
     }
 
