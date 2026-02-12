@@ -20,25 +20,28 @@ public class Config {
     private static Config instance;
     private final Properties props = new Properties();
 
-    private static String envOrEmpty(String key) {
+    private static String envOrDefault(String key, String fallback) {
         String value = System.getenv(key);
-        return value == null ? "" : value;
+        if (value == null || value.isBlank()) {
+            return fallback;
+        }
+        return value;
     }
 
     // Defaults (WooCommerce)
     public static final String DEFAULT_WC_BASE_URL = "https://www.tramarossa.it/wp-json/wc/v3";
-    public static final String DEFAULT_WC_CONSUMER_KEY = envOrEmpty("WC_CONSUMER_KEY");
-    public static final String DEFAULT_WC_CONSUMER_SECRET = envOrEmpty("WC_CONSUMER_SECRET");
+    public static final String DEFAULT_WC_CONSUMER_KEY = "";
+    public static final String DEFAULT_WC_CONSUMER_SECRET = "";
 
     // Defaults (Gravity Forms REST API v2)
     public static final String DEFAULT_GF_BASE_URL = "https://b2b.tramarossa.it";
-    public static final String DEFAULT_GF_CONSUMER_KEY = envOrEmpty("GF_CONSUMER_KEY");
-    public static final String DEFAULT_GF_CONSUMER_SECRET = envOrEmpty("GF_CONSUMER_SECRET");
+    public static final String DEFAULT_GF_CONSUMER_KEY = "";
+    public static final String DEFAULT_GF_CONSUMER_SECRET = "";
 
     // Defaults (Oracle)
     public static final String DEFAULT_DB_URL = "jdbc:oracle:thin:@//ONISD2.onindustry.local:1521/TRAMDB";
-    public static final String DEFAULT_DB_USER = envOrEmpty("DB_USER");
-    public static final String DEFAULT_DB_PASS = envOrEmpty("DB_PASSWORD");
+    public static final String DEFAULT_DB_USER = "";
+    public static final String DEFAULT_DB_PASS = "";
 
     // NEW defaults (GF viewer)
     public static final int DEFAULT_GF_FORM_ID = 224;
@@ -48,6 +51,12 @@ public class Config {
     private Config() {
         setDefaults();
         load();
+        warnIfBlank("woo.key", "WooCommerce consumer key");
+        warnIfBlank("woo.secret", "WooCommerce consumer secret");
+        warnIfBlank("gf.key", "Gravity Forms consumer key");
+        warnIfBlank("gf.secret", "Gravity Forms consumer secret");
+        warnIfBlank("db.user", "DB user");
+        warnIfBlank("db.password", "DB password");
     }
 
     public static synchronized Config get() {
@@ -58,18 +67,18 @@ public class Config {
     private void setDefaults() {
         // Woo
         props.setProperty("woo.api.base", DEFAULT_WC_BASE_URL);
-        props.setProperty("woo.key", DEFAULT_WC_CONSUMER_KEY);
-        props.setProperty("woo.secret", DEFAULT_WC_CONSUMER_SECRET);
+        props.setProperty("woo.key", envOrDefault("WC_CONSUMER_KEY", DEFAULT_WC_CONSUMER_KEY));
+        props.setProperty("woo.secret", envOrDefault("WC_CONSUMER_SECRET", DEFAULT_WC_CONSUMER_SECRET));
 
         // Gravity Forms
         props.setProperty("gf.api.base", DEFAULT_GF_BASE_URL);
-        props.setProperty("gf.key", DEFAULT_GF_CONSUMER_KEY);
-        props.setProperty("gf.secret", DEFAULT_GF_CONSUMER_SECRET);
+        props.setProperty("gf.key", envOrDefault("GF_CONSUMER_KEY", DEFAULT_GF_CONSUMER_KEY));
+        props.setProperty("gf.secret", envOrDefault("GF_CONSUMER_SECRET", DEFAULT_GF_CONSUMER_SECRET));
 
         // DB
         props.setProperty("db.url", DEFAULT_DB_URL);
-        props.setProperty("db.user", DEFAULT_DB_USER);
-        props.setProperty("db.password", DEFAULT_DB_PASS);
+        props.setProperty("db.user", envOrDefault("DB_USER", DEFAULT_DB_USER));
+        props.setProperty("db.password", envOrDefault("DB_PASSWORD", DEFAULT_DB_PASS));
 
         // NEW viewer defaults
         props.setProperty("gf.formId", String.valueOf(DEFAULT_GF_FORM_ID));
@@ -90,6 +99,13 @@ public class Config {
     public synchronized void save() throws IOException {
         try (OutputStream out = new FileOutputStream(CONFIG_FILE)) {
             props.store(out, "Client Importer configuration");
+        }
+    }
+
+    private void warnIfBlank(String key, String label) {
+        String value = props.getProperty(key);
+        if (value == null || value.isBlank()) {
+            System.err.println("Missing configuration for " + label + " (" + key + ").");
         }
     }
 
