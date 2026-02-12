@@ -109,7 +109,7 @@ public class Config {
     private void warnIfBlank(String key, String label, String envVar) {
         String value = props.getProperty(key);
         if (isBlank(value)) {
-            System.err.println("Missing configuration for " + label + " (" + key + "). Set " + envVar + " or add " + key + " in " + CONFIG_FILE + ".");
+            System.err.println("Missing configuration for " + label + " (" + key + "). Set " + envVar + " or add " + key + " in your local properties file (" + CONFIG_FILE + ").");
         }
     }
 
